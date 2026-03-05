@@ -6,7 +6,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const ZAI_BASE_URL = "https://open.bigmodel.cn/api/paas/v4";
+const ZAI_BASE_URL = "https://api.z.ai/api/paas/v4";
 
 serve(async (req) => {
   if (req.method === "OPTIONS")

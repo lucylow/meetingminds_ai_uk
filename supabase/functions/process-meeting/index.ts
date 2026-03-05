@@ -6,7 +6,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const ZAI_BASE_URL = "https://api.z.ai/api/coding/paas/v4";
+const ZAI_BASE_URL = "https://api.z.ai/api/paas/v4";
 
 serve(async (req) => {
   if (req.method === "OPTIONS")
@@ -38,7 +38,7 @@ serve(async (req) => {
           "Accept-Language": "en-US,en",
         },
         body: JSON.stringify({
-          model: "glm-4.5-flash",
+          model: "glm-5",
           messages: [
             {
               role: "system",

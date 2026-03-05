@@ -167,10 +167,13 @@ export default function DemoPage() {
           <h1 className="text-4xl font-bold text-foreground mb-2">
             See MeetingMind AI in action
           </h1>
-          <p className="text-xl text-muted-foreground">
-            Real transcript processing powered by AI agents
+           <p className="text-xl text-muted-foreground">
+            Real transcript processing powered by <span className="font-semibold text-primary">Z.AI GLM</span> models
           </p>
-        </div>
+          <div className="mt-2 inline-flex items-center gap-2 bg-muted/50 border border-border rounded-full px-4 py-1.5 text-xs text-muted-foreground">
+            <Brain className="w-3.5 h-3.5 text-primary" />
+            Powered by Z.AI GLM-4-Flash · Function Calling · Sentiment Analysis
+          </div>
 
         {error && (
           <div className="mb-6 p-4 bg-destructive/10 border border-destructive/20 rounded-lg flex items-start gap-3">

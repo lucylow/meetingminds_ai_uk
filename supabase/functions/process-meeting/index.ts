@@ -35,9 +35,10 @@ serve(async (req) => {
         headers: {
           Authorization: `Bearer ${ZAI_API_KEY}`,
           "Content-Type": "application/json",
+          "Accept-Language": "en-US,en",
         },
         body: JSON.stringify({
-          model: "GLM-4.5-Flash",
+          model: "glm-4.5-flash",
           messages: [
             {
               role: "system",

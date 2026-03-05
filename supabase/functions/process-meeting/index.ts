@@ -37,7 +37,7 @@ serve(async (req) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "glm-4-flashx",
+          model: "glm-4-flash",
           messages: [
             {
               role: "system",

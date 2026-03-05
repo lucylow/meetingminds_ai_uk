@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Loader2, AlertCircle, Send } from "lucide-react";
+import { Loader2, AlertCircle, Send, Brain } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 
@@ -27,6 +27,27 @@ interface ProcessResult {
   keyPoints: string[];
   participants: string[];
   actions: ActionItem[];
+}
+
+interface SentimentHighlight {
+  speaker: string;
+  sentiment: "positive" | "neutral" | "negative";
+  quote: string;
+  reason: string;
+}
+
+interface SentimentTopic {
+  topic: string;
+  sentiment: "positive" | "neutral" | "negative";
+  intensity: number;
+}
+
+interface SentimentResult {
+  overall: "positive" | "neutral" | "negative" | "mixed";
+  score: number;
+  highlights: SentimentHighlight[];
+  topics: SentimentTopic[];
+  recommendations: string[];
 }
 
 const SUGGESTED_QUESTIONS = [

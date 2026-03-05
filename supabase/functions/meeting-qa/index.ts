@@ -1,5 +1,4 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { create } from "https://deno.land/x/djwt@v3.0.2/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -7,25 +6,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const ZAI_BASE_URL = "https://open.bigmodel.cn/api/paas/v4";
-
-async function generateZaiToken(apiKey: string): Promise<string> {
-  const [id, secret] = apiKey.split(".");
-  if (!id || !secret) throw new Error("Invalid ZAI_API_KEY format");
-
-  const now = Date.now();
-  const encoder = new TextEncoder();
-  const keyData = encoder.encode(secret);
-  const cryptoKey = await crypto.subtle.importKey(
-    "raw", keyData, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]
-  );
-
-  return await create(
-    { alg: "HS256", typ: "JWT", sign_type: "SIGN" },
-    { api_key: id, exp: Math.floor(now / 1000) + 3600, timestamp: now },
-    cryptoKey
-  );
-}
+const ZAI_BASE_URL = "https://api.z.ai/api/paas/v4";
 
 serve(async (req) => {
   if (req.method === "OPTIONS")
@@ -43,14 +24,12 @@ serve(async (req) => {
     const ZAI_API_KEY = Deno.env.get("ZAI_API_KEY");
     if (!ZAI_API_KEY) throw new Error("ZAI_API_KEY not configured");
 
-    const token = await generateZaiToken(ZAI_API_KEY);
-
     const response = await fetch(
       `${ZAI_BASE_URL}/chat/completions`,
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${ZAI_API_KEY}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
@@ -71,7 +50,8 @@ serve(async (req) => {
 
     if (!response.ok) {
       const status = response.status;
-      await response.text();
+      const text = await response.text();
+      console.error("Z.AI API error:", status, text);
       if (status === 429) {
         return new Response(JSON.stringify({ error: "Rate limited. Please try again shortly." }), {
           status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },

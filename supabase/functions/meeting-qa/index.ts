@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { create } from "https://deno.land/x/djwt@v3.0.2/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -7,6 +8,24 @@ const corsHeaders = {
 };
 
 const ZAI_BASE_URL = "https://open.bigmodel.cn/api/paas/v4";
+
+async function generateZaiToken(apiKey: string): Promise<string> {
+  const [id, secret] = apiKey.split(".");
+  if (!id || !secret) throw new Error("Invalid ZAI_API_KEY format");
+
+  const now = Date.now();
+  const encoder = new TextEncoder();
+  const keyData = encoder.encode(secret);
+  const cryptoKey = await crypto.subtle.importKey(
+    "raw", keyData, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]
+  );
+
+  return await create(
+    { alg: "HS256", typ: "JWT", sign_type: "SIGN" },
+    { api_key: id, exp: Math.floor(now / 1000) + 3600, timestamp: now },
+    cryptoKey
+  );
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS")
@@ -24,12 +43,14 @@ serve(async (req) => {
     const ZAI_API_KEY = Deno.env.get("ZAI_API_KEY");
     if (!ZAI_API_KEY) throw new Error("ZAI_API_KEY not configured");
 
+    const token = await generateZaiToken(ZAI_API_KEY);
+
     const response = await fetch(
       `${ZAI_BASE_URL}/chat/completions`,
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${ZAI_API_KEY}`,
+          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({

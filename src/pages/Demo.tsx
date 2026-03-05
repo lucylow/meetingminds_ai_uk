@@ -63,10 +63,13 @@ export default function DemoPage() {
   const [answer, setAnswer] = useState<string | null>(null);
   const [answerLoading, setAnswerLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [sentiment, setSentiment] = useState<SentimentResult | null>(null);
+  const [sentimentLoading, setSentimentLoading] = useState(false);
 
   async function onProcess() {
     setLoading(true);
     setResult(null);
+    setSentiment(null);
     setError(null);
     try {
       const { data, error: fnError } = await supabase.functions.invoke("process-meeting", {
@@ -75,6 +78,16 @@ export default function DemoPage() {
       if (fnError) throw fnError;
       if (data?.error) throw new Error(data.error);
       setResult(data as ProcessResult);
+
+      // Also run sentiment analysis in parallel
+      setSentimentLoading(true);
+      supabase.functions.invoke("analyze-sentiment", {
+        body: { transcript: TRANSCRIPT },
+      }).then(({ data: sData, error: sError }) => {
+        if (!sError && sData && !sData.error) {
+          setSentiment(sData as SentimentResult);
+        }
+      }).catch(() => {}).finally(() => setSentimentLoading(false));
     } catch (err: any) {
       const msg = err?.message || "Failed to process transcript";
       setError(msg);
@@ -111,7 +124,25 @@ export default function DemoPage() {
     setAnswer(null);
     setQuestion("");
     setError(null);
+    setSentiment(null);
   }
+
+  const getSentimentColor = (s: string) => {
+    switch (s) {
+      case "positive": return "text-green-500";
+      case "negative": return "text-red-500";
+      case "mixed": return "text-yellow-500";
+      default: return "text-muted-foreground";
+    }
+  };
+
+  const getSentimentBg = (s: string) => {
+    switch (s) {
+      case "positive": return "bg-green-500/10 border-green-500/30";
+      case "negative": return "bg-red-500/10 border-red-500/30";
+      default: return "bg-muted/30 border-border";
+    }
+  };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {

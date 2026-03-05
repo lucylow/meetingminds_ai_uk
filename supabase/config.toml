@@ -1,0 +1,7 @@
+project_id = "nxtwqjcfkvnswffsryiy"
+
+[functions.process-meeting]
+verify_jwt = false
+
+[functions.meeting-qa]
+verify_jwt = false

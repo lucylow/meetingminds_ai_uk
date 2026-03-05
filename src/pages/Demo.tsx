@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Loader2, AlertCircle, Send } from "lucide-react";
+import { Loader2, AlertCircle, Send, Brain } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 
@@ -29,6 +29,27 @@ interface ProcessResult {
   actions: ActionItem[];
 }
 
+interface SentimentHighlight {
+  speaker: string;
+  sentiment: "positive" | "neutral" | "negative";
+  quote: string;
+  reason: string;
+}
+
+interface SentimentTopic {
+  topic: string;
+  sentiment: "positive" | "neutral" | "negative";
+  intensity: number;
+}
+
+interface SentimentResult {
+  overall: "positive" | "neutral" | "negative" | "mixed";
+  score: number;
+  highlights: SentimentHighlight[];
+  topics: SentimentTopic[];
+  recommendations: string[];
+}
+
 const SUGGESTED_QUESTIONS = [
   "What were the main decisions?",
   "What's the budget breakdown?",
@@ -42,10 +63,13 @@ export default function DemoPage() {
   const [answer, setAnswer] = useState<string | null>(null);
   const [answerLoading, setAnswerLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [sentiment, setSentiment] = useState<SentimentResult | null>(null);
+  const [sentimentLoading, setSentimentLoading] = useState(false);
 
   async function onProcess() {
     setLoading(true);
     setResult(null);
+    setSentiment(null);
     setError(null);
     try {
       const { data, error: fnError } = await supabase.functions.invoke("process-meeting", {
@@ -54,6 +78,16 @@ export default function DemoPage() {
       if (fnError) throw fnError;
       if (data?.error) throw new Error(data.error);
       setResult(data as ProcessResult);
+
+      // Also run sentiment analysis in parallel
+      setSentimentLoading(true);
+      supabase.functions.invoke("analyze-sentiment", {
+        body: { transcript: TRANSCRIPT },
+      }).then(({ data: sData, error: sError }) => {
+        if (!sError && sData && !sData.error) {
+          setSentiment(sData as SentimentResult);
+        }
+      }).catch(() => {}).finally(() => setSentimentLoading(false));
     } catch (err: any) {
       const msg = err?.message || "Failed to process transcript";
       setError(msg);
@@ -90,7 +124,25 @@ export default function DemoPage() {
     setAnswer(null);
     setQuestion("");
     setError(null);
+    setSentiment(null);
   }
+
+  const getSentimentColor = (s: string) => {
+    switch (s) {
+      case "positive": return "text-green-500";
+      case "negative": return "text-red-500";
+      case "mixed": return "text-yellow-500";
+      default: return "text-muted-foreground";
+    }
+  };
+
+  const getSentimentBg = (s: string) => {
+    switch (s) {
+      case "positive": return "bg-green-500/10 border-green-500/30";
+      case "negative": return "bg-red-500/10 border-red-500/30";
+      default: return "bg-muted/30 border-border";
+    }
+  };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -115,9 +167,13 @@ export default function DemoPage() {
           <h1 className="text-4xl font-bold text-foreground mb-2">
             See MeetingMind AI in action
           </h1>
-          <p className="text-xl text-muted-foreground">
-            Real transcript processing powered by AI agents
+           <p className="text-xl text-muted-foreground">
+            Real transcript processing powered by <span className="font-semibold text-primary">Z.AI GLM</span> models
           </p>
+          <div className="mt-2 inline-flex items-center gap-2 bg-muted/50 border border-border rounded-full px-4 py-1.5 text-xs text-muted-foreground">
+            <Brain className="w-3.5 h-3.5 text-primary" />
+            Powered by Z.AI GLM-4-Flash · Function Calling · Sentiment Analysis
+          </div>
         </div>
 
         {error && (
@@ -242,6 +298,74 @@ export default function DemoPage() {
             )}
           </div>
         </div>
+
+        {/* Sentiment Analysis - Full width below */}
+        {(sentiment || sentimentLoading) && (
+          <div className="mt-8 bg-card p-8 rounded-2xl shadow-lg border border-border">
+            <h4 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
+              <Brain className="w-5 h-5 text-primary" />
+              Sentiment Analysis
+              <span className="text-xs font-normal text-muted-foreground ml-2">by Z.AI GLM</span>
+            </h4>
+            {sentimentLoading ? (
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Loader2 className="w-4 h-4 animate-spin" /> Analyzing sentiment...
+              </div>
+            ) : sentiment ? (
+              <div className="space-y-6">
+                <div className="flex items-center gap-4">
+                  <div className={`text-3xl font-bold ${getSentimentColor(sentiment.overall)}`}>
+                    {sentiment.overall.toUpperCase()}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Score: <span className="font-semibold text-foreground">{sentiment.score.toFixed(2)}</span> / 1.0
+                  </div>
+                </div>
+
+                {sentiment.topics?.length > 0 && (
+                  <div>
+                    <p className="font-semibold text-foreground text-sm mb-2">Topic Sentiment</p>
+                    <div className="flex flex-wrap gap-2">
+                      {sentiment.topics.map((t, i) => (
+                        <span key={i} className={`px-3 py-1.5 rounded-lg border text-xs font-medium ${getSentimentBg(t.sentiment)}`}>
+                          {t.topic} <span className={getSentimentColor(t.sentiment)}>({t.sentiment})</span>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {sentiment.highlights?.length > 0 && (
+                  <div>
+                    <p className="font-semibold text-foreground text-sm mb-2">Key Moments</p>
+                    <div className="space-y-2">
+                      {sentiment.highlights.map((h, i) => (
+                        <div key={i} className={`p-3 rounded-lg border ${getSentimentBg(h.sentiment)}`}>
+                          <p className="text-sm font-semibold text-foreground">{h.speaker}</p>
+                          <p className="text-xs text-muted-foreground italic">"{h.quote}"</p>
+                          <p className="text-xs text-muted-foreground mt-1">{h.reason}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {sentiment.recommendations?.length > 0 && (
+                  <div>
+                    <p className="font-semibold text-foreground text-sm mb-2">Recommendations</p>
+                    <ul className="space-y-1">
+                      {sentiment.recommendations.map((r, i) => (
+                        <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
+                          <span className="text-primary">→</span> {r}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            ) : null}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -174,6 +174,7 @@ export default function DemoPage() {
             <Brain className="w-3.5 h-3.5 text-primary" />
             Powered by Z.AI GLM-4-Flash · Function Calling · Sentiment Analysis
           </div>
+        </div>
 
         {error && (
           <div className="mb-6 p-4 bg-destructive/10 border border-destructive/20 rounded-lg flex items-start gap-3">

@@ -37,48 +37,61 @@ serve(async (req) => {
           messages: [
             {
               role: "system",
-              content: `You are an expert meeting analyst. Analyze the transcript and return structured JSON with:
-- "summary": concise executive summary (2-3 sentences)
-- "keyPoints": array of 3-7 key discussion points (short bullet strings)
-- "participants": array of participant names
-- "actions": array of action items, each with "title" (string), "owner" (string), "deadline" (string), "priority" ("high"|"medium"|"low")
+              content: `You are a sentiment and tone analyst for meetings. Analyze the transcript and return structured JSON with:
+- "overall": overall sentiment ("positive"|"neutral"|"negative"|"mixed")
+- "score": sentiment score from -1.0 (very negative) to 1.0 (very positive)
+- "highlights": array of objects with "speaker" (string), "sentiment" ("positive"|"neutral"|"negative"), "quote" (short excerpt), "reason" (brief explanation)
+- "topics": array of objects with "topic" (string), "sentiment" ("positive"|"neutral"|"negative"), "intensity" (1-5)
+- "recommendations": array of 2-3 actionable suggestions based on the meeting tone
 
 Return ONLY valid JSON, no markdown fences.`,
             },
-            { role: "user", content: `Analyze this meeting transcript:\n\n${transcript}` },
+            { role: "user", content: `Analyze the sentiment of this meeting transcript:\n\n${transcript}` },
           ],
           tools: [
             {
               type: "function",
               function: {
-                name: "meeting_analysis",
-                description: "Return structured meeting analysis",
+                name: "sentiment_analysis",
+                description: "Return structured sentiment analysis of a meeting",
                 parameters: {
                   type: "object",
                   properties: {
-                    summary: { type: "string" },
-                    keyPoints: { type: "array", items: { type: "string" } },
-                    participants: { type: "array", items: { type: "string" } },
-                    actions: {
+                    overall: { type: "string", enum: ["positive", "neutral", "negative", "mixed"] },
+                    score: { type: "number" },
+                    highlights: {
                       type: "array",
                       items: {
                         type: "object",
                         properties: {
-                          title: { type: "string" },
-                          owner: { type: "string" },
-                          deadline: { type: "string" },
-                          priority: { type: "string", enum: ["high", "medium", "low"] },
+                          speaker: { type: "string" },
+                          sentiment: { type: "string", enum: ["positive", "neutral", "negative"] },
+                          quote: { type: "string" },
+                          reason: { type: "string" },
                         },
-                        required: ["title", "owner", "deadline", "priority"],
+                        required: ["speaker", "sentiment", "quote", "reason"],
                       },
                     },
+                    topics: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        properties: {
+                          topic: { type: "string" },
+                          sentiment: { type: "string", enum: ["positive", "neutral", "negative"] },
+                          intensity: { type: "number" },
+                        },
+                        required: ["topic", "sentiment", "intensity"],
+                      },
+                    },
+                    recommendations: { type: "array", items: { type: "string" } },
                   },
-                  required: ["summary", "keyPoints", "participants", "actions"],
+                  required: ["overall", "score", "highlights", "topics", "recommendations"],
                 },
               },
             },
           ],
-          tool_choice: { type: "function", function: { name: "meeting_analysis" } },
+          tool_choice: { type: "function", function: { name: "sentiment_analysis" } },
         }),
       }
     );
@@ -109,7 +122,7 @@ Return ONLY valid JSON, no markdown fences.`,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
-    console.error("process-meeting error:", e);
+    console.error("analyze-sentiment error:", e);
     return new Response(
       JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }

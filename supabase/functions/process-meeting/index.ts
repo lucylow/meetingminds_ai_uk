@@ -38,7 +38,7 @@ serve(async (req) => {
           "Accept-Language": "en-US,en",
         },
         body: JSON.stringify({
-          model: "glm-4.5-flash",
+          model: "glm-4.5",
           messages: [
             {
               role: "system",

@@ -34,6 +34,50 @@ async function startServer() {
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
+
+  // CORS for development
+  app.use((req, res, next) => {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Headers", "authorization, content-type, x-client-info, apikey");
+    if (req.method === "OPTIONS") return res.sendStatus(200);
+    next();
+  });
+
+  // Health endpoint
+  app.get("/api/health", (_req, res) => {
+    res.json({
+      status: "ok",
+      mockMode: process.env.MOCK_MODE === "true",
+      timestamp: new Date().toISOString(),
+    });
+  });
+
+  // Mock mode stubs
+  if (process.env.MOCK_MODE === "true") {
+    const fs = await import("fs");
+    const path = await import("path");
+    const mockDir = path.resolve(process.cwd(), "../../mock-data");
+
+    app.post("/api/v1/models/transcribe", (_req, res) => {
+      try {
+        const transcript = fs.readFileSync(path.join(mockDir, "transcripts/meeting_001.txt"), "utf8");
+        res.json({ transcript });
+      } catch {
+        res.json({ transcript: "Mock transcript not found. Ensure mock-data/ directory exists." });
+      }
+    });
+
+    app.get("/api/v1/meetings/:id/summary", (req, res) => {
+      try {
+        const summary = JSON.parse(fs.readFileSync(path.join(mockDir, "summaries/sum_meeting_001_v1.json"), "utf8"));
+        const actions = JSON.parse(fs.readFileSync(path.join(mockDir, "actions/actions_meeting_001.json"), "utf8"));
+        res.json({ ...summary, action_items: actions });
+      } catch {
+        res.json({ summary_text: "Mock summary", action_items: [] });
+      }
+    });
+  }
+
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);
   // Chat API with streaming and tool calling

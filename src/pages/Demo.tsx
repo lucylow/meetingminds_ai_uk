@@ -298,6 +298,74 @@ export default function DemoPage() {
             )}
           </div>
         </div>
+
+        {/* Sentiment Analysis - Full width below */}
+        {(sentiment || sentimentLoading) && (
+          <div className="mt-8 bg-card p-8 rounded-2xl shadow-lg border border-border">
+            <h4 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
+              <Brain className="w-5 h-5 text-primary" />
+              Sentiment Analysis
+              <span className="text-xs font-normal text-muted-foreground ml-2">by Z.AI GLM</span>
+            </h4>
+            {sentimentLoading ? (
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Loader2 className="w-4 h-4 animate-spin" /> Analyzing sentiment...
+              </div>
+            ) : sentiment ? (
+              <div className="space-y-6">
+                <div className="flex items-center gap-4">
+                  <div className={`text-3xl font-bold ${getSentimentColor(sentiment.overall)}`}>
+                    {sentiment.overall.toUpperCase()}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Score: <span className="font-semibold text-foreground">{sentiment.score.toFixed(2)}</span> / 1.0
+                  </div>
+                </div>
+
+                {sentiment.topics?.length > 0 && (
+                  <div>
+                    <p className="font-semibold text-foreground text-sm mb-2">Topic Sentiment</p>
+                    <div className="flex flex-wrap gap-2">
+                      {sentiment.topics.map((t, i) => (
+                        <span key={i} className={`px-3 py-1.5 rounded-lg border text-xs font-medium ${getSentimentBg(t.sentiment)}`}>
+                          {t.topic} <span className={getSentimentColor(t.sentiment)}>({t.sentiment})</span>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {sentiment.highlights?.length > 0 && (
+                  <div>
+                    <p className="font-semibold text-foreground text-sm mb-2">Key Moments</p>
+                    <div className="space-y-2">
+                      {sentiment.highlights.map((h, i) => (
+                        <div key={i} className={`p-3 rounded-lg border ${getSentimentBg(h.sentiment)}`}>
+                          <p className="text-sm font-semibold text-foreground">{h.speaker}</p>
+                          <p className="text-xs text-muted-foreground italic">"{h.quote}"</p>
+                          <p className="text-xs text-muted-foreground mt-1">{h.reason}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {sentiment.recommendations?.length > 0 && (
+                  <div>
+                    <p className="font-semibold text-foreground text-sm mb-2">Recommendations</p>
+                    <ul className="space-y-1">
+                      {sentiment.recommendations.map((r, i) => (
+                        <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
+                          <span className="text-primary">→</span> {r}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            ) : null}
+          </div>
+        )}
       </div>
     </div>
   );

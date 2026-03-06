@@ -77,15 +77,15 @@ export default function FeaturesPage() {
           <div className="grid md:grid-cols-3 gap-8 text-center">
             <div>
               <h3 className="text-xl font-bold text-foreground mb-2">Backend</h3>
-              <p className="text-muted-foreground">Edge Functions, Lovable Cloud</p>
+              <p className="text-muted-foreground">Edge Functions, OpenClaw</p>
             </div>
             <div>
               <h3 className="text-xl font-bold text-foreground mb-2">Database</h3>
-              <p className="text-muted-foreground">PostgreSQL via Lovable Cloud</p>
+              <p className="text-muted-foreground">PostgreSQL via OpenClaw</p>
             </div>
             <div>
               <h3 className="text-xl font-bold text-foreground mb-2">AI Engine</h3>
-              <p className="text-muted-foreground">Lovable AI Gateway (Gemini, GPT)</p>
+              <p className="text-muted-foreground">Z.AI GLM Models (GLM-4, GLM-3-turbo)</p>
             </div>
           </div>
         </div>

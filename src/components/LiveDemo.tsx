@@ -144,7 +144,7 @@ const LiveDemo = () => {
             See MeetingMind in action
           </h2>
           <p className="text-muted-foreground max-w-lg mx-auto">
-            Click "Process" to send the transcript to our AI agents. Real summarization, action extraction, and Q&A — powered by Lovable Cloud.
+            Click "Process" to send the transcript to our AI agents. Real summarization, action extraction, and Q&A — powered by Z.AI GLM models &amp; OpenClaw.
           </p>
         </motion.div>
 
@@ -213,7 +213,7 @@ const LiveDemo = () => {
             )}
 
             <p className="text-xs text-dim mt-4">
-              ⚡ Powered by real AI agents via Lovable Cloud edge functions.
+              ⚡ Powered by real AI agents via Z.AI GLM models &amp; OpenClaw.
             </p>
           </motion.div>
 

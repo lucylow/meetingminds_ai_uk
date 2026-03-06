@@ -411,9 +411,6 @@ const LiveDemo = () => {
           </motion.div>
         </div>
 
-        <p className="text-center text-xs text-dim mt-8 font-mono">
-          🧠 AI agents powered by Lovable Cloud edge functions
-        </p>
       </div>
     </section>
   );
